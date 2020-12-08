@@ -5,7 +5,6 @@
 package-lock.json
 
 # production
-/public
 /dist-server
 
 # misc
