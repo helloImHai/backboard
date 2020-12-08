@@ -6,7 +6,7 @@ import logger from "morgan";
 import indexRouter from "./routes/index";
 import cors from "cors";
 import Server from "./logic/Server";
-import https from "https";
+import http from "http";
 import fs from "fs";
 
 var app = express();
@@ -24,7 +24,7 @@ const options = {
   cert: fs.readFileSync(path.join(__dirname, "../public", "/cert.pem")),
 };
 
-const server = https.createServer(app);
+const server = http.createServer(app);
 const socketServer = new Server(server);
 socketServer.init();
 console.log("Initiated");
