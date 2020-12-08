@@ -24,7 +24,7 @@ const options = {
   cert: fs.readFileSync(path.join(__dirname, "../public", "/cert.pem")),
 };
 
-const server = https.createServer(options, app);
+const server = https.createServer(app);
 const socketServer = new Server(server);
 socketServer.init();
 console.log("Initiated");
