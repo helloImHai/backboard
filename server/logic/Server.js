@@ -7,9 +7,7 @@ let _rooms = {};
 
 class Server {
   constructor(expressServer) {
-    this.server = io(expressServer, {
-      origins: ["http://localhost:3000"],
-    });
+    this.server = io(expressServer);
   }
 
   init() {

@@ -6,7 +6,8 @@ import logger from "morgan";
 import indexRouter from "./routes/index";
 import cors from "cors";
 import Server from "./logic/Server";
-import http from "http";
+import https from "https";
+import fs from "fs";
 
 var app = express();
 app.set("view engine", "html");
@@ -18,7 +19,12 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "../public")));
 app.use("/", indexRouter);
 
-const server = http.createServer(app);
+const options = {
+  key: fs.readFileSync(path.join(__dirname, "../public", "/key.pem")),
+  cert: fs.readFileSync(path.join(__dirname, "../public", "/cert.pem")),
+};
+
+const server = https.createServer(options, app);
 const socketServer = new Server(server);
 socketServer.init();
 console.log("Initiated");
