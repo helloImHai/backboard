@@ -10,7 +10,7 @@ import Server from "./logic/Server";
 import http from "http";
 
 var app = express();
-app.set("view engine", "ejs");
+app.set("view engine", "html");
 app.use(logger("dev"));
 app.use(cors());
 app.use(express.json());
