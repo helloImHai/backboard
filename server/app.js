@@ -4,7 +4,6 @@ import path from "path";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import indexRouter from "./routes/index";
-import usersRouter from "./routes/users";
 import cors from "cors";
 import Server from "./logic/Server";
 import http from "http";
@@ -18,7 +17,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "../public")));
 app.use("/", indexRouter);
-app.use("/users", usersRouter);
 
 const server = http.createServer(app);
 const socketServer = new Server(server);
