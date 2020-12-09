@@ -95,7 +95,7 @@ class Server {
         return;
       }
       addClientToRoom(room);
-      room.emit("joined_room", room.shortcode);
+      room.emit("joined_room", room.shortCode);
       room.emitState();
     });
 
