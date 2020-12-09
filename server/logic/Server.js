@@ -39,8 +39,19 @@ class Server {
       client.addRoom(room);
       socket.join(room.shortCode);
       room.addNewPlayer(socket.id, client.name);
-      room.emit("joined_room", room.shortCode);
     }
+
+    function setUpNewRoom(server) {
+      const chance = new Chance();
+      let shortCode = null;
+      while (!shortCode || _rooms[shortCode] != null) {
+        shortCode = chance.integer({ min: 100000, max: 999999 });
+      }
+      const room = new Room(server, `${shortCode}`);
+      _rooms[room.shortCode] = room;
+      return room;
+    }
+
     /**
      * Set Name
      */
@@ -50,18 +61,23 @@ class Server {
     });
 
     /**
-     * Creating Room
+     * Creating online Room
      */
     socket.on("create_room", () => {
-      const chance = new Chance();
-      let shortCode = null;
-      while (!shortCode || _rooms[shortCode] != null) {
-        shortCode = chance.integer({ min: 100000, max: 999999 });
-      }
-      const room = new Room(this.server, `${shortCode}`);
-      _rooms[room.shortCode] = room;
-
+      const room = setUpNewRoom(this.server);
       addClientToRoom(room);
+      room.emit("joined_room", room.shortCode);
+      room.emitState();
+    });
+
+    /**
+     * Creating Room
+     */
+    socket.on("create_local_room", () => {
+      const room = setUpNewRoom(this.server);
+      addClientToRoom(room);
+      room.setUpGame();
+      room.emit("local_game_started", room.shortCode);
       room.emitState();
     });
 
@@ -104,6 +120,7 @@ class Server {
      */
     socket.on("start_game", () => {
       const room = client.room;
+      if (room == null) return;
       room.setUpGame();
       room.emit("game_started");
       room.emitState();
