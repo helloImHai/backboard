@@ -106,14 +106,20 @@ class Room {
     this.gameState.gameGrid[row][col].isWinningCell = true;
   }
 
+  /**
+   * Checks whether player marking grid at (row, column) will result in a win.
+   * If it results in a win, sets isGameOver to true and colors the
+   * corresponding grids.
+   */
   checkWin(row, col, player) {
-    for (let dir = 0; dir < 4; dir++) {
-      const [firstDir, secondDir] = [dir, dir + 4];
+    for (let orientation = 0; orientation < 4; orientation++) {
+      const [firstDir, secondDir] = [orientation, orientation + 4];
       const len =
         this.explore(this.next(row, col, firstDir), player, firstDir) +
         this.explore(this.next(row, col, secondDir), player, secondDir) +
         1;
       if (len >= 5) {
+        // If win in current orientation, color the grids
         this.gameState.isGameOver = true;
         this.explore(this.next(row, col, firstDir), player, firstDir, true);
         this.explore([row, col], player, secondDir, true);
