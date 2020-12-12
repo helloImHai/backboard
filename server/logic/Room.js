@@ -2,6 +2,10 @@ const HEIGHT = 22;
 const WIDTH = 22;
 const NEXT_COL = [-1, -1, 0, 1, 1, 1, 0, -1];
 const NEXT_ROW = [0, -1, -1, -1, 0, 1, 1, 1];
+const EMPTY_CELL = -1;
+const OPEN_CELL_VALUE = 0.5;
+const BLOCKED_CELL_VALUE = 0;
+const CONSECUTIVE_CELL_VALUE = 1;
 
 class Room {
   constructor(server, shortCode) {
@@ -106,45 +110,76 @@ class Room {
     this.gameState.gameGrid[row][col].isWinningCell = true;
   }
 
-  /**
-   * Checks whether player marking grid at (row, column) will result in a win.
-   * If it results in a win, sets isGameOver to true and colors the
-   * corresponding grids.
-   */
   checkWin(row, col, player) {
     for (let orientation = 0; orientation < 4; orientation++) {
-      const [firstDir, secondDir] = [orientation, orientation + 4];
-      const len =
-        this.explore(this.next(row, col, firstDir), player, firstDir) +
-        this.explore(this.next(row, col, secondDir), player, secondDir) +
+      const [dir1, dir2] = [orientation, orientation + 4];
+      const numberOfConsecutiveCells =
+        this.countConsecutive(this.nextCell(row, col, dir1), player, dir1) +
+        this.countConsecutive(this.nextCell(row, col, dir2), player, dir2) +
         1;
-      if (len >= 5) {
-        // If win in current orientation, color the grids
+      // Win condition
+      if (numberOfConsecutiveCells >= 5) {
         this.gameState.isGameOver = true;
-        this.explore(this.next(row, col, firstDir), player, firstDir, true);
-        this.explore([row, col], player, secondDir, true);
+        this.colorOrientation(row, col, orientation, player);
       }
     }
   }
 
-  next(row, col, dirIndex) {
-    return [row + NEXT_ROW[dirIndex], col + NEXT_COL[dirIndex]];
+  nextCell(row, col, direction) {
+    return [row + NEXT_ROW[direction], col + NEXT_COL[direction]];
   }
 
-  explore(pos, player, dirIndex, isWinning) {
-    const [row, col] = pos;
-    if (row < 0 || row >= HEIGHT || col < 0 || col >= WIDTH) {
-      return 0;
-    } else if (this.gameState.gameGrid[row][col].player === -1) {
-      return 0.5;
-    } else if (this.gameState.gameGrid[row][col].player !== player) {
-      return 0;
-    }
-    if (isWinning) this.colorWinningCell(row, col);
+  isEmptyCell(row, col) {
+    return this.gameState.gameGrid[row][col].player === EMPTY_CELL;
+  }
+
+  isInvalidPosition(row, col) {
+    return row < 0 || row >= HEIGHT || col < 0 || col >= WIDTH;
+  }
+
+  isBlocked(row, col, player) {
     return (
-      1 +
-      this.explore(this.next(row, col, dirIndex), player, dirIndex, isWinning)
+      this.gameState.gameGrid[row][col].player !== EMPTY_CELL &&
+      this.gameState.gameGrid[row][col].player !== player
     );
+  }
+
+  countConsecutive(position, player, direction) {
+    const [row, col] = position;
+    if (this.isInvalidPosition(row, col) || this.isBlocked(row, col, player)) {
+      return BLOCKED_CELL_VALUE; // 0
+    } else if (this.isEmptyCell(row, col)) {
+      return OPEN_CELL_VALUE; // 0.5
+    }
+    // Happy path, consecutive cell, add 1 and continue counting
+    return (
+      CONSECUTIVE_CELL_VALUE + // 1
+      this.countConsecutive(
+        this.nextCell(row, col, direction),
+        player,
+        direction
+      )
+    );
+  }
+
+  colorOrientation(row, col, orientation, player) {
+    const position = [row, col];
+    const [dir1, dir2] = [orientation, orientation + 4];
+    this.colorDirection(position, dir1, player);
+    this.colorDirection(position, dir2, player);
+  }
+
+  colorDirection(position, direction, player) {
+    const [row, col] = position;
+    if (
+      this.isInvalidPosition(row, col) ||
+      this.isEmptyCell(row, col) ||
+      this.isBlocked(row, col, player)
+    ) {
+      return;
+    }
+    this.colorWinningCell(row, col);
+    this.colorDirection(this.nextCell(row, col, direction), direction, player);
   }
 
   emitState() {
